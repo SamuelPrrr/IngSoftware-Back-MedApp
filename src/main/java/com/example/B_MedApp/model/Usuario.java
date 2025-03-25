@@ -15,6 +15,7 @@ public class Usuario {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "IDUsuario", nullable = false)
     private Long idUsuario;
 
     @Column(name = "Nombre", nullable = false)
@@ -29,8 +30,14 @@ public class Usuario {
      @Column(name = "Rol", nullable = false)
     private String rol;
 
+    @PrePersist
+    public void setDefaultRole() {
+        if (this.rol == null) {
+            this.rol = "Paciente";
+        }
+    }
 
-
+    //Constructores
     public Usuario(Long idUsuario, String nombre, String correo, String contraseña, String rol) {
         this.idUsuario = idUsuario;
         this.nombre = nombre;
@@ -44,14 +51,4 @@ public class Usuario {
         this.correo = correo;
         this.rol = rol;
     }
-
-    //@PrePersist
-    public void setDefaultRole() {
-        if (this.rol == null) {
-            this.rol = "Paciente";
-        }
-    }
-
-
-
 }
