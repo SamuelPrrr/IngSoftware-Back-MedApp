@@ -36,4 +36,5 @@ public class PacienteController {
     public ResponseEntity<Object> createPaciente(@RequestBody Paciente paciente) {
         return pacienteService.savePaciente(paciente);
     }
+
 }
