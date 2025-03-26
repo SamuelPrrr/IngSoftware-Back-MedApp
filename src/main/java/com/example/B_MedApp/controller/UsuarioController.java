@@ -1,17 +1,18 @@
 package com.example.B_MedApp.controller;
 
-
+import com.example.B_MedApp.model.Medico;
+import com.example.B_MedApp.model.Paciente;
 import com.example.B_MedApp.model.Usuario;
 import com.example.B_MedApp.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
-@RequestMapping(path = "api/v1/usuario")
+@RequestMapping("/usuarios")
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
@@ -21,18 +22,29 @@ public class UsuarioController {
         this.usuarioService = usuarioService;
     }
 
-    @GetMapping
-    public List<Usuario> getAll(){
-        return this.usuarioService.getUsers();
+    // Obtener todos los pacientes
+    @GetMapping("/pacientes")
+    public ResponseEntity<List<Paciente>> getAllPatients() {
+        List<Paciente> pacientes = usuarioService.getPatients();
+        return new ResponseEntity<>(pacientes, HttpStatus.OK);
     }
 
-    @PostMapping(path = "email")
-    public ResponseEntity<Object> getByEmail(@RequestBody Map<String, String> request){
-        return this.usuarioService.getUserByEmail(request.get("correo"));
+    // Obtener todos los médicos
+    @GetMapping("/medicos")
+    public ResponseEntity<List<Usuario>> getAllDoctors() {
+        List<Usuario> medicos = usuarioService.getDoctors();
+        return new ResponseEntity<>(medicos, HttpStatus.OK);
     }
 
-    @PostMapping(path = "register")
-    public ResponseEntity<Object> save(@RequestBody  Usuario usuario){
-        return this.usuarioService.newUser(usuario);
+    // Obtener un usuario por correo
+    @GetMapping("/correo/{correo}")
+    public ResponseEntity<Object> getUserByCorreo(@PathVariable String correo) {
+        return usuarioService.getUserByCorreo(correo);
+    }
+
+    // Actualizar un usuario por ID
+    @PutMapping("/actualizar/{id}")
+    public ResponseEntity<Object> updateUser(@PathVariable Long id, @RequestBody Usuario usuario) {
+        return usuarioService.updateUser(id, usuario);
     }
 }

@@ -1,17 +1,18 @@
 package com.example.B_MedApp;
 
+import com.example.B_MedApp.model.*;
+import com.example.B_MedApp.repository.*;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 
 import java.util.List;
 
 @SpringBootApplication
 public class BMedAppApplication {
-	public static void main(String[] args) {
-		SpringApplication.run(BMedAppApplication.class, args);
-	}
-	
+	public static void main(String[] args) {SpringApplication.run(BMedAppApplication.class, args);}
+
 	public void addCorsMappings(CorsRegistry registry) {
 		// Permitir CORS para React Native en localhost:3000
 		registry.addMapping("/**")

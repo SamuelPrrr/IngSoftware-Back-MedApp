@@ -2,13 +2,12 @@ package com.example.B_MedApp.repository;
 
 import com.example.B_MedApp.model.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.repository.NoRepositoryBean;
 
 import java.util.Optional;
 
-@Repository
+
+@NoRepositoryBean //With this Spring will not create a definition
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
-
     Optional<Usuario> findByCorreo(String correo);
-
 }
