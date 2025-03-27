@@ -7,7 +7,7 @@ import org.springframework.data.repository.NoRepositoryBean;
 import java.util.Optional;
 
 
-@NoRepositoryBean //With this Spring will not create a definition
+//@NoRepositoryBean //With this Spring will not create a definition
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     Optional<Usuario> findByCorreo(String correo);
 }
