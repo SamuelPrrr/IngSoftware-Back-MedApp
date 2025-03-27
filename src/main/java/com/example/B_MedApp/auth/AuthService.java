@@ -64,7 +64,4 @@ public class AuthService {
         medicoRepository.save(user);
         return "Success";
     }
-
-
-
 }

@@ -20,6 +20,7 @@ public class AuthController {
         return ResponseEntity.ok(authService.login(request));
     }
 
+    //Nota: Cambiar el valor que devuelve con un ResponseEntity
     @PostMapping(value = "register")
     public String register(@RequestBody RegisterRequest request) {
         return String.valueOf(authService.register(request));
@@ -29,5 +30,4 @@ public class AuthController {
     public String registerMed(@RequestBody RegisterRequest request) {
         return String.valueOf(authService.registerMed(request));
     }
-
 }
