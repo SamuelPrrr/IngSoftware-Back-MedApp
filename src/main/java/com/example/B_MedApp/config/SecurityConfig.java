@@ -24,6 +24,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable()) // Deshabilitar CSRF si usas JWT
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll() // Permitir sin autenticación
+                        .requestMatchers("/api/pacientes/**").hasAuthority("ROLE_PACIENTE") // Solo PACIENTES pueden acceder
+                        .requestMatchers("/medicos/**").hasAuthority("ROLE_MEDICO")
                         .anyRequest().authenticated() // Proteger el resto
                 )
                 .sessionManagement(sessionManager ->

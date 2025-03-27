@@ -1,8 +1,10 @@
 package com.example.B_MedApp.auth;
 
 import com.example.B_MedApp.jwt.JwtService;
+import com.example.B_MedApp.model.Medico;
 import com.example.B_MedApp.model.Paciente;
 import com.example.B_MedApp.model.UserType;
+import com.example.B_MedApp.repository.MedicoRepository;
 import com.example.B_MedApp.repository.PacienteRepository;
 import com.example.B_MedApp.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ public class AuthService {
     private final JwtService jwtservice;
     private final PasswordEncoder passwordEncoder; // Esto se encarga en de ecriptar
     private final AuthenticationManager authenticationManager;
+    private final MedicoRepository medicoRepository;
 
     public AuthResponse login(LoginRequest request) {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getCorreo(), request.getPassword()));
@@ -40,14 +43,25 @@ public class AuthService {
                 encodedPassword,
                 UserType.PACIENTE
         );
-
         // Guarda el usuario en el repositorio
         pacienteRepository.save(user);
-
         //La anotación builder nos permite hacer constructores en el authresponse si los maneje
         // pero con mis modelos no debido a que se confunde un poco con la herencia
         //Para evitar errores maneje sus constructores manualmente
+        return "Success";
+    }
 
+    public String registerMed(RegisterRequest request) {
+        String encodedPassword = passwordEncoder.encode(request.getPassword());
+        Medico user = new Medico(
+                request.getNombre(),
+                request.getCorreo(),
+                request.getTelefono(),
+                request.getSexo(),
+                encodedPassword,
+                UserType.MEDICO
+        );
+        medicoRepository.save(user);
         return "Success";
     }
 

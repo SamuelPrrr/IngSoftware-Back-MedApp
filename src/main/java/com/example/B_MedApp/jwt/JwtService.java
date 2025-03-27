@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 
 @Service
@@ -21,7 +23,13 @@ public class JwtService {
 
     // Obtener el token JWT a partir de los detalles del usuario
     public String getToken(UserDetails user) {
+
+        //Para mandar el rol
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("role", user.getAuthorities().iterator().next().getAuthority());
+
         return Jwts.builder()
+                .setClaims(claims)
                 .setSubject(user.getUsername()) // Seteamos el nombre del usuario como subject
                 .setIssuedAt(new Date()) // Establecemos la fecha de emisión
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 24)) // Establecemos la fecha de expiración
@@ -37,6 +45,10 @@ public class JwtService {
     // Obtener el nombre de usuario del token
     public String getUsernameFromToken(String token) {
         return getClaim(token, Claims::getSubject); // Extraemos el nombre de usuario del token
+    }
+
+    public String getRoleFromToken(String token) {
+        return getClaim(token, claims -> claims.get("role", String.class));
     }
 
     // Validar si el token es válido

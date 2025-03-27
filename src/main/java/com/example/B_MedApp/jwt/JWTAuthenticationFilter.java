@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -17,6 +18,8 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
 
 // Extiende de esa clase abstracta para crear filtros personalizados
 // y garantizar que el filtro se ejecute solo una vez por cada solicitud HTTPS
@@ -55,11 +58,26 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
             if (jwtService.isTokenValid(token, userDetails)) {
+                // Obtener el rol desde el token
+                String role = jwtService.getRoleFromToken(token);
+
+                // 🔹 Imprimir para depuración
+                System.out.println("Rol extraído del token: " + role);
+                System.out.println("Roles en UserDetails: " + userDetails.getAuthorities());
+
+                // Asegurar que el rol tenga el prefijo ROLE_
+                if (!role.startsWith("ROLE_")) {
+                    role = "ROLE_" + role;
+                }
+
+                Collection<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(role));
                 // Si el token es válido, se establece la autenticación
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails,
                         null,
-                        userDetails.getAuthorities()
+                        //Por defecto:
+                        //userDetails.getAuthorities()
+                        authorities // ✅ Ahora se usa el rol correcto
                 );
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);

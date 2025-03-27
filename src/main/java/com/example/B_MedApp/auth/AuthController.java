@@ -25,4 +25,9 @@ public class AuthController {
         return String.valueOf(authService.register(request));
     }
 
+    @PostMapping(value = "registerMed")
+    public String registerMed(@RequestBody RegisterRequest request) {
+        return String.valueOf(authService.registerMed(request));
+    }
+
 }
