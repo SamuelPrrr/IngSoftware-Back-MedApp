@@ -29,7 +29,7 @@ public class AuthService {
         return new AuthResponse(token);
     }
 
-    public AuthResponse register(RegisterRequest request) {
+    public String register(RegisterRequest request) {
         String encodedPassword = passwordEncoder.encode(request.getPassword());
         // Creación del usuario con builder
         Paciente user = new Paciente( // Si Usuario es una clase abstracta, usa Paciente en lugar de Usuario si no puedes instanciar Usuario directamente
@@ -48,9 +48,9 @@ public class AuthService {
         // pero con mis modelos no debido a que se confunde un poco con la herencia
         //Para evitar errores maneje sus constructores manualmente
 
-        return AuthResponse.builder()
-                .token(jwtservice.getToken(user))
-                .build();
+        return "Success";
     }
+
+
 
 }
