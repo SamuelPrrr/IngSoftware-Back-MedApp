@@ -21,19 +21,19 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .csrf(csrf -> csrf.disable()) // Deshabilitar CSRF si usas JWT
+                .csrf(csrf -> csrf.disable()) // Deshabilitar CSRF por que estamos utilizando JWT
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll() // Permitir sin autenticación
                         .requestMatchers("/api/pacientes/**").hasAuthority("ROLE_PACIENTE") // Solo PACIENTES pueden acceder
                         .requestMatchers("/medicos/**").hasAuthority("ROLE_MEDICO")
-                        .anyRequest().authenticated() // Proteger el resto
+                        .anyRequest().authenticated() // Protegemos el resto
                 )
                 .sessionManagement(sessionManager ->
                         sessionManager
                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authProvider)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                //.formLogin(withDefaults()) // Habilita el login por defecto (puedes quitarlo si usas JWT)
+                //.formLogin(withDefaults()) // Habilita el login por defecto (En este caso lo quitamos por que ocupamos JWT)
                 .build();
     }
 }

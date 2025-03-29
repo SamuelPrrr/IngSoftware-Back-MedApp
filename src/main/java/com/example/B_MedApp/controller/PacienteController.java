@@ -27,9 +27,10 @@ public class PacienteController {
     }
 
     // Obtener paciente por correo
-    @GetMapping("/{correo}")
-    public ResponseEntity<Object> getPacienteByCorreo(@RequestBody String correo) {
-        return pacienteService.getPacienteByCorreo(correo);
+    @GetMapping("/profile")
+    public ResponseEntity<Object> getAuthenticatedUser(@RequestHeader("Authorization") String token) {
+        token = token.replace("Bearer ", ""); // Remueve 'Bearer ' del token
+        return pacienteService.getAuthenticatedUser(token);
     }
 
     // Crear un nuevo paciente

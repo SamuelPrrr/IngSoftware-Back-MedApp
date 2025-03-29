@@ -1,5 +1,6 @@
 package com.example.B_MedApp.service;
 
+import com.example.B_MedApp.jwt.JwtService;
 import com.example.B_MedApp.model.Paciente;
 import com.example.B_MedApp.model.UserType;
 import com.example.B_MedApp.model.Usuario;
@@ -17,10 +18,12 @@ import java.util.Optional;
 public class PacienteService {
 
     private final PacienteRepository pacienteRepository;
+    private final JwtService jwtService;
 
     @Autowired
     public PacienteService(PacienteRepository pacienteRepository) {
         this.pacienteRepository = pacienteRepository;
+        this.jwtService = new JwtService();
     }
 
     // Obtener todos los pacientes
@@ -29,8 +32,10 @@ public class PacienteService {
     }
 
     // Obtener paciente por correo
-    public ResponseEntity<Object> getPacienteByCorreo(String correo) {
+    public ResponseEntity<Object> getAuthenticatedUser(String token) {
+        String correo = jwtService.getUsernameFromToken(token);
         Optional<Usuario> paciente = pacienteRepository.findByCorreo(correo);
+
         HashMap<String, Object> response = new HashMap<>();
         if (paciente.isPresent() && paciente.get().getRol() == UserType.PACIENTE) {
             response.put("error", false);
