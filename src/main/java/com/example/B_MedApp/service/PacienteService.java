@@ -52,13 +52,11 @@ public class PacienteService {
     public ResponseEntity<Object> savePaciente(Paciente paciente) {
         Optional<Usuario> status = pacienteRepository.findByCorreo(paciente.getCorreo());
         HashMap<String, Object> response = new HashMap<>();
-
         if (status.isPresent()) {
             response.put("error", true);
             response.put("message", "Ya existe un paciente con ese correo");
             return new ResponseEntity<>(response, HttpStatus.CONFLICT);
         }
-
         pacienteRepository.save(paciente);
         response.put("message", "Paciente registrado exitosamente");
         response.put("data", paciente);
