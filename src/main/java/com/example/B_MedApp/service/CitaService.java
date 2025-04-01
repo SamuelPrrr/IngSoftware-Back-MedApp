@@ -24,10 +24,7 @@ public class CitaService {
     private final PacienteRepository pacienteRepository;
     private final JwtService jwtService;
 
-    public CitaService(CitaRepository citaRepository,
-                       MedicoRepository medicoRepository,
-                       PacienteRepository pacienteRepository,
-                       JwtService jwtService) {
+    public CitaService(CitaRepository citaRepository, MedicoRepository medicoRepository, PacienteRepository pacienteRepository, JwtService jwtService) {
         this.citaRepository = citaRepository;
         this.medicoRepository = medicoRepository;
         this.pacienteRepository = pacienteRepository;
