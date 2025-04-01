@@ -11,4 +11,5 @@ import java.util.Optional;
 public interface HorarioLaboralRepository extends JpaRepository<HorarioLaboral, Long> {
     List<HorarioLaboral> findHorarioByMedico_IdUsuario(Long medicoIdUsuario);
     Optional<HorarioLaboral> findByMedico_IdUsuarioAndDiaSemana(Long medicoIdUsuario, DiaSemana diaSemana);
+    List<HorarioLaboral> findHorarioLaboralByDiaSemana(DiaSemana diaSemana);
 }

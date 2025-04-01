@@ -1,9 +1,8 @@
 package com.example.B_MedApp.service;
 
 import com.example.B_MedApp.jwt.JwtService;
-import com.example.B_MedApp.model.Paciente;
-import com.example.B_MedApp.model.UserType;
-import com.example.B_MedApp.model.Usuario;
+import com.example.B_MedApp.model.*;
+import com.example.B_MedApp.repository.HorarioLaboralRepository;
 import com.example.B_MedApp.repository.PacienteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,13 +16,17 @@ import java.util.Optional;
 @Service
 public class PacienteService {
 
+    private final HorarioLaboralRepository horarioLaboralRepository;
     private final PacienteRepository pacienteRepository;
     private final JwtService jwtService;
+    private final CitaService citaService;
 
     @Autowired
-    public PacienteService(PacienteRepository pacienteRepository) {
+    public PacienteService(PacienteRepository pacienteRepository, HorarioLaboralRepository horarioLaboralRepository, JwtService jwtService, CitaService citaService) {
         this.pacienteRepository = pacienteRepository;
         this.jwtService = new JwtService();
+        this.horarioLaboralRepository = horarioLaboralRepository;
+        this.citaService = citaService;
     }
 
     // Obtener todos los pacientes
@@ -62,4 +65,36 @@ public class PacienteService {
         response.put("data", paciente);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
+
+
+    // HORARIOS
+    // Obtener todos los horarios de los médicos en un día específico
+    public ResponseEntity<Object> obtenerAllHorariosPorDia(String token, HorarioLaboral horario) {
+        // Verificar autenticación del paciente
+        ResponseEntity<Object> pacienteResponse = getAuthenticatedUser(token);
+        HashMap<String, Object> response = new HashMap<>();
+
+        if (pacienteResponse.getStatusCode() != HttpStatus.OK) {
+            response.put("error", true);
+            response.put("message", "Paciente no autenticado o no encontrado");
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+        }
+
+        DiaSemana diaSemana = horario.getDiaSemana();
+        // Obtener todos los horarios para el día específico
+        List<HorarioLaboral> horarios = horarioLaboralRepository.findHorarioLaboralByDiaSemana(diaSemana);
+
+        if (horarios.isEmpty()) {
+            response.put("error", true);
+            response.put("message", "No se encontraron horarios para el día: " + diaSemana);
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        }
+
+        response.put("error", false);
+        response.put("data", horarios);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+
+
 }

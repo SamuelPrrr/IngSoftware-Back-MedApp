@@ -28,7 +28,7 @@ public class MedicoController {
     }
 
     // Obtener horarios del medico
-    @GetMapping("/getAll/horarios")
+    @GetMapping("/get/horarios")
     public ResponseEntity<Object> getHorarios(@RequestHeader("Authorization") String token) {
         token = token.replace("Bearer ", ""); // Remueve 'Bearer ' del token
         return this.medicoService.obtenerHorariosPorMedico(token);
