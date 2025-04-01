@@ -67,34 +67,5 @@ public class PacienteService {
     }
 
 
-    // HORARIOS
-    // Obtener todos los horarios de los médicos en un día específico
-    public ResponseEntity<Object> obtenerAllHorariosPorDia(String token, HorarioLaboral horario) {
-        // Verificar autenticación del paciente
-        ResponseEntity<Object> pacienteResponse = getAuthenticatedUser(token);
-        HashMap<String, Object> response = new HashMap<>();
-
-        if (pacienteResponse.getStatusCode() != HttpStatus.OK) {
-            response.put("error", true);
-            response.put("message", "Paciente no autenticado o no encontrado");
-            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
-        }
-
-        DiaSemana diaSemana = horario.getDiaSemana();
-        // Obtener todos los horarios para el día específico
-        List<HorarioLaboral> horarios = horarioLaboralRepository.findHorarioLaboralByDiaSemana(diaSemana);
-
-        if (horarios.isEmpty()) {
-            response.put("error", true);
-            response.put("message", "No se encontraron horarios para el día: " + diaSemana);
-            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-        }
-
-        response.put("error", false);
-        response.put("data", horarios);
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-
 
 }

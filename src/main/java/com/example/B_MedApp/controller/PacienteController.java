@@ -48,35 +48,4 @@ public class PacienteController {
     public ResponseEntity<Object> createPaciente(@RequestBody Paciente paciente) {
         return pacienteService.savePaciente(paciente);
     }
-
-    //Horarios
-    @PostMapping ("/horarios/citas")
-    public ResponseEntity<Object> obtenerAllHorariosPorDia(@RequestHeader("Authorization") String token, @RequestBody HorarioLaboral horario){
-        token = token.replace("Bearer ", ""); // Remueve 'Bearer ' del token
-        return pacienteService.obtenerAllHorariosPorDia(token, horario);
-    }
-
-    //CITAS
-    @PostMapping("/citas/{idUsuario}")
-    @PreAuthorize("hasAuthority('ROLE_PACIENTE')")
-    public ResponseEntity<?> registrarCita(@RequestHeader("Authorization") String token, @PathVariable Long idUsuario, @RequestBody CitaRequest citaRequest) {
-
-        try {
-            // Limpia el token
-            String jwtToken = token.replace("Bearer ", "").trim();
-            // Registra la cita
-            ResponseEntity<Object> response = citaService.registrarCitaPaciente(jwtToken, idUsuario, citaRequest);
-            // Si hay error en el servicio, lo propagamos
-            if (response.getStatusCode().isError()) {
-                return response;
-            }
-            return ResponseEntity.ok(response.getBody());
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                    .body(Map.of(
-                            "error", true,
-                            "message", "Error al procesar la solicitud: " + e.getMessage()
-                    ));
-        }
-    }
 }

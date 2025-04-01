@@ -12,4 +12,5 @@ public interface HorarioLaboralRepository extends JpaRepository<HorarioLaboral, 
     List<HorarioLaboral> findHorarioByMedico_IdUsuario(Long medicoIdUsuario);
     Optional<HorarioLaboral> findByMedico_IdUsuarioAndDiaSemana(Long medicoIdUsuario, DiaSemana diaSemana);
     List<HorarioLaboral> findHorarioLaboralByDiaSemana(DiaSemana diaSemana);
+    List<HorarioLaboral> findByDiaSemana(DiaSemana diaSemana);
 }
