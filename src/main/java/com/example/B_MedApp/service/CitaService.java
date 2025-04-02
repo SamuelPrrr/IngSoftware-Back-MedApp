@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -100,7 +101,7 @@ public class CitaService {
         }
     }
 
-    // 2. Obtener todas las citas de un paciente
+    // 2. Obtener todas las citas de un paciente (Se ocupa en Profile/Citas)
     public ResponseEntity<Object> obtenerCitasPorPaciente(String token) {
         HashMap<String, Object> response = new HashMap<>();
         try {
@@ -141,7 +142,7 @@ public class CitaService {
         }
     }
 
-    // 3. Obtener citas por fecha específica
+    // 3. Obtener citas por fecha específica (Se ocupa para Book (agendar citas))
     public ResponseEntity<Object> obtenerCitasPorFecha(String token, String fechaStr) {
         HashMap<String, Object> response = new HashMap<>();
         try {
@@ -176,83 +177,6 @@ public class CitaService {
         } catch (Exception e) {
             response.put("error", true);
             response.put("message", "Error al obtener citas por fecha: " + e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    // 4. Modificar una cita existente
-    public ResponseEntity<Object> modificarCita(String token, Long citaId, CitaRequest citaRequest) {
-        HashMap<String, Object> response = new HashMap<>();
-        try {
-            // Validar token y paciente
-            String correo = jwtService.getUsernameFromToken(token);
-            Optional<Paciente> pacienteOpt = pacienteRepository.findByCorreoAndRol(correo, UserType.PACIENTE);
-
-            if (pacienteOpt.isEmpty()) {
-                response.put("error", true);
-                response.put("message", "Paciente no encontrado");
-                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-            }
-
-            // Buscar la cita
-            Optional<Cita> citaOpt = citaRepository.findById(citaId);
-            if (citaOpt.isEmpty()) {
-                response.put("error", true);
-                response.put("message", "Cita no encontrada");
-                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-            }
-
-            Cita cita = citaOpt.get();
-
-            // Verificar que la cita pertenece al paciente
-            if (!cita.getPaciente().getIdUsuario().equals(pacienteOpt.get().getIdUsuario())) {
-                response.put("error", true);
-                response.put("message", "No tienes permiso para modificar esta cita");
-                return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
-            }
-
-            // Validar nueva fecha/hora
-            if (citaRequest.getFechaHora() != null) {
-                if (citaRequest.getFechaHora().isBefore(LocalDateTime.now())) {
-                    response.put("error", true);
-                    response.put("message", "La nueva fecha/hora no puede ser en el pasado");
-                    return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-                }
-
-                // Validar disponibilidad del médico en el nuevo horario
-                boolean citaExistente = citaRepository.existsByMedicoAndFechaHoraBetweenAndIdCitaNot(
-                        cita.getMedico(),
-                        citaRequest.getFechaHora().minusMinutes(29),
-                        citaRequest.getFechaHora().plusMinutes(29),
-                        citaId);
-
-                if (citaExistente) {
-                    response.put("error", true);
-                    response.put("message", "El médico ya tiene una cita en ese horario");
-                    return new ResponseEntity<>(response, HttpStatus.CONFLICT);
-                }
-
-                cita.setFechaHora(citaRequest.getFechaHora());
-            }
-
-            // Actualizar otros campos
-            if (citaRequest.getMotivo() != null) {
-                cita.setMotivo(citaRequest.getMotivo());
-            }
-            if (citaRequest.getDuracion() != null) {
-                cita.setDuracion(citaRequest.getDuracion());
-            }
-
-            Cita citaActualizada = citaRepository.save(cita);
-
-            response.put("error", false);
-            response.put("message", "Cita actualizada exitosamente");
-            response.put("data", citaActualizada);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-
-        } catch (Exception e) {
-            response.put("error", true);
-            response.put("message", "Error al modificar cita: " + e.getMessage());
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -407,5 +331,75 @@ public class CitaService {
             response.put("message", "Error al obtener horarios: " + e.getMessage());
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    public ResponseEntity<Object> actualizarEstadoCita(Long idCita, EstadoCita nuevoEstado) {
+        //String correo = jwtService.getUsernameFromToken(token);
+        //Optional<Usuario> paciente = pacienteRepository.findByCorreo(correo);
+        HashMap<String, Object> response = new HashMap<>();
+
+        try {
+
+            Optional<Cita> citaOptional = citaRepository.findById(idCita);
+
+            if (citaOptional.isEmpty()) {
+                response.put("error", true);
+                response.put("message", "Cita no encontrada");
+                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+            }
+
+            Cita cita = citaOptional.get();
+
+            // Verificar que la cita pertenece al paciente autenticado
+//            if (!cita.getPaciente().equals(paciente.get())) {
+//                response.put("error", true);
+//                response.put("message", "No tienes permiso para modificar esta cita");
+//                return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
+//            }
+
+            // Validar transiciones de estado permitidas
+            if (cita.getEstado() == EstadoCita.CANCELADA || cita.getEstado() == EstadoCita.COMPLETADA) {
+                response.put("error", true);
+                response.put("message", "No se puede modificar una cita ya cancelada o completada");
+                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            }
+
+            // Validar que el nuevo estado sea válido (confirmada o cancelada)
+            if (nuevoEstado != EstadoCita.CONFIRMADA && nuevoEstado != EstadoCita.CANCELADA) {
+                response.put("error", true);
+                response.put("message", "Estado no válido. Solo se permite confirmar o cancelar");
+                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            }
+
+            // Actualizar estado
+            cita.setEstado(nuevoEstado);
+            Cita citaActualizada = citaRepository.save(cita);
+
+            // Construir respuesta exitosa
+            response.put("error", false);
+            response.put("message", "Estado de cita actualizado exitosamente");
+            response.put("data", citaActualizada);
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } catch (Exception e) {
+            response.put("error", true);
+            response.put("message", "Error al actualizar estado de cita: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
+
+    private void notificarCancelacion(Cita cita) {
+        // Implementar lógica de notificación (email, push notification, etc.)
+        // Ejemplo simplificado:
+        String mensaje = String.format(
+                "La cita del paciente %s para el %s ha sido cancelada",
+                cita.getPaciente().getNombre(),
+                cita.getFechaHora().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
+        );
+        System.out.println("Notificación: " + mensaje);
+        // Aquí iría el código para enviar notificación real al médico
     }
 }
