@@ -34,6 +34,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/pacientes/**").hasAuthority("ROLE_PACIENTE")
                         .requestMatchers("/api/pacientes/citas/**").hasAuthority("ROLE_PACIENTE")
                         .requestMatchers("/api/medicos/**").hasAuthority("ROLE_MEDICO")
+                        .requestMatchers("/api/medicos/citas/**").hasAuthority("ROLE_MEDICO")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

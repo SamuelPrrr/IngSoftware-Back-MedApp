@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -125,7 +126,6 @@ public class MedicoService {
         response.put("data", horario);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
-
 
     // 📌 Eliminar horario laboral
     public ResponseEntity<Object> eliminarHorario(String token, HorarioLaboral horario) {

@@ -4,15 +4,23 @@ import com.example.B_MedApp.jwt.JwtService;
 import com.example.B_MedApp.model.Medico;
 import com.example.B_MedApp.model.Paciente;
 import com.example.B_MedApp.model.UserType;
+import com.example.B_MedApp.model.Usuario;
 import com.example.B_MedApp.repository.MedicoRepository;
 import com.example.B_MedApp.repository.PacienteRepository;
 import com.example.B_MedApp.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -27,9 +35,46 @@ public class AuthService {
 
     public AuthResponse login(LoginRequest request) {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getCorreo(), request.getPassword()));
-        UserDetails user = usuarioRepository.findByCorreo(request.getCorreo()).orElseThrow();
+        UserDetails user = usuarioRepository.findByCorreo(request.getCorreo()).orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
         String token = jwtservice.getToken(user);
         return new AuthResponse(token);
+    }
+
+    //Para que nos rediriga a sus tabs correspondientes
+    public ResponseEntity<Object> getAuthenticatedUser(String token) {
+        String correo = jwtservice.getUsernameFromToken(token);
+        Optional<Usuario> userOptional = usuarioRepository.findByCorreo(correo);
+
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of(
+                            "error", true,
+                            "message", "Usuario no encontrado con correo: " + correo
+                    ));
+        }
+
+        Usuario user = userOptional.get();
+        Map<String, Object> response = new HashMap<>();
+
+        switch (user.getRol()) {
+            case PACIENTE:
+                response.put("message", "El usuario es Paciente");
+                response.put("data", "/(tabs)/profile");
+                break;
+            case MEDICO:
+                response.put("message", "El usuario es Médico");
+                response.put("data", "/(medTabs)/profile"); // Ejemplo de ruta
+                break;
+            case ADMINISTRADOR:
+                response.put("message", "El usuario es Administrador");
+                response.put("data", "/admin/tabs"); // Ejemplo de ruta
+                break;
+            default:
+                response.put("error", true);
+                response.put("message", "Rol no reconocido");
+                return ResponseEntity.badRequest().body(response);
+        }
+        return ResponseEntity.ok(response);
     }
 
     public String register(RegisterRequest request) {

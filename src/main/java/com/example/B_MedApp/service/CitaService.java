@@ -181,6 +181,74 @@ public class CitaService {
         }
     }
 
+    public ResponseEntity<Object> actualizarEstadoCita(Long idCita, EstadoCita nuevoEstado) {
+        //String correo = jwtService.getUsernameFromToken(token);
+        //Optional<Usuario> paciente = pacienteRepository.findByCorreo(correo);
+        HashMap<String, Object> response = new HashMap<>();
+
+        try {
+
+            Optional<Cita> citaOptional = citaRepository.findById(idCita);
+
+            if (citaOptional.isEmpty()) {
+                response.put("error", true);
+                response.put("message", "Cita no encontrada");
+                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+            }
+
+            Cita cita = citaOptional.get();
+
+            // Verificar que la cita pertenece al paciente autenticado
+//            if (!cita.getPaciente().equals(paciente.get())) {
+//                response.put("error", true);
+//                response.put("message", "No tienes permiso para modificar esta cita");
+//                return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
+//            }
+
+            // Validar transiciones de estado permitidas
+            if (cita.getEstado() == EstadoCita.CANCELADA || cita.getEstado() == EstadoCita.COMPLETADA) {
+                response.put("error", true);
+                response.put("message", "No se puede modificar una cita ya cancelada o completada");
+                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            }
+
+            // Validar que el nuevo estado sea válido (confirmada o cancelada)
+            if (nuevoEstado != EstadoCita.CONFIRMADA && nuevoEstado != EstadoCita.CANCELADA) {
+                response.put("error", true);
+                response.put("message", "Estado no válido. Solo se permite confirmar o cancelar");
+                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            }
+
+            // Actualizar estado
+            cita.setEstado(nuevoEstado);
+            Cita citaActualizada = citaRepository.save(cita);
+
+            // Construir respuesta exitosa
+            response.put("error", false);
+            response.put("message", "Estado de cita actualizado exitosamente");
+            response.put("data", citaActualizada);
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } catch (Exception e) {
+            response.put("error", true);
+            response.put("message", "Error al actualizar estado de cita: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private void notificarCancelacion(Cita cita) {
+        // Implementar lógica de notificación (email, push notification, etc.)
+        // Ejemplo simplificado:
+        String mensaje = String.format(
+                "La cita del paciente %s para el %s ha sido cancelada",
+                cita.getPaciente().getNombre(),
+                cita.getFechaHora().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
+        );
+        System.out.println("Notificación: " + mensaje);
+        // Aquí iría el código para enviar notificación real al médico
+    }
+
     // 5. Eliminar una cita
     public ResponseEntity<Object> eliminarCita(String token, Long citaId) {
         HashMap<String, Object> response = new HashMap<>();
@@ -231,6 +299,7 @@ public class CitaService {
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
 
     //Lógica para horarios
     public ResponseEntity<Object> obtenerHorariosMedicosPorDia(String token, DiaSemana diaSemana) {
@@ -333,73 +402,44 @@ public class CitaService {
         }
     }
 
-    public ResponseEntity<Object> actualizarEstadoCita(Long idCita, EstadoCita nuevoEstado) {
-        //String correo = jwtService.getUsernameFromToken(token);
-        //Optional<Usuario> paciente = pacienteRepository.findByCorreo(correo);
+    // 2. Obtener todas las citas de un paciente (Se ocupa en Profile/Citas)
+    public ResponseEntity<Object> obtenerCitasPorMedico(String token) {
         HashMap<String, Object> response = new HashMap<>();
-
         try {
+            String correo = jwtService.getUsernameFromToken(token);
+            Optional<Medico> medicoOpt = medicoRepository.findByCorreoAndRol(correo, UserType.MEDICO);
 
-            Optional<Cita> citaOptional = citaRepository.findById(idCita);
-
-            if (citaOptional.isEmpty()) {
+            if (medicoOpt.isEmpty()) {
                 response.put("error", true);
-                response.put("message", "Cita no encontrada");
+                response.put("message", "Paciente no encontrado");
                 return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
             }
 
-            Cita cita = citaOptional.get();
+            List<Cita> citas = citaRepository.findByMedicoOrderByFechaHoraAsc(medicoOpt.get());
 
-            // Verificar que la cita pertenece al paciente autenticado
-//            if (!cita.getPaciente().equals(paciente.get())) {
-//                response.put("error", true);
-//                response.put("message", "No tienes permiso para modificar esta cita");
-//                return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
-//            }
+            // Puedes personalizar los datos que devuelves
+            List<Map<String, Object>> citasResponse = citas.stream().map(cita -> {
+                Map<String, Object> citaMap = new HashMap<>();
+                citaMap.put("id", cita.getIdCita());
+                citaMap.put("fechaHora", cita.getFechaHora());
+                citaMap.put("motivo", cita.getMotivo());
+                citaMap.put("estado", cita.getEstado());
+                citaMap.put("paciente", Map.of(
+                        "id", cita.getPaciente().getIdUsuario(),
+                        "nombre", cita.getPaciente().getNombre(),
+                        "sexo", cita.getPaciente().getSexo()
+                ));
+                return citaMap;
+            }).collect(Collectors.toList());
 
-            // Validar transiciones de estado permitidas
-            if (cita.getEstado() == EstadoCita.CANCELADA || cita.getEstado() == EstadoCita.COMPLETADA) {
-                response.put("error", true);
-                response.put("message", "No se puede modificar una cita ya cancelada o completada");
-                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-            }
-
-            // Validar que el nuevo estado sea válido (confirmada o cancelada)
-            if (nuevoEstado != EstadoCita.CONFIRMADA && nuevoEstado != EstadoCita.CANCELADA) {
-                response.put("error", true);
-                response.put("message", "Estado no válido. Solo se permite confirmar o cancelar");
-                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-            }
-
-            // Actualizar estado
-            cita.setEstado(nuevoEstado);
-            Cita citaActualizada = citaRepository.save(cita);
-
-            // Construir respuesta exitosa
             response.put("error", false);
-            response.put("message", "Estado de cita actualizado exitosamente");
-            response.put("data", citaActualizada);
-
+            response.put("data", citasResponse);
             return new ResponseEntity<>(response, HttpStatus.OK);
 
         } catch (Exception e) {
             response.put("error", true);
-            response.put("message", "Error al actualizar estado de cita: " + e.getMessage());
+            response.put("message", "Error al obtener citas: " + e.getMessage());
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
-    }
-
-
-
-    private void notificarCancelacion(Cita cita) {
-        // Implementar lógica de notificación (email, push notification, etc.)
-        // Ejemplo simplificado:
-        String mensaje = String.format(
-                "La cita del paciente %s para el %s ha sido cancelada",
-                cita.getPaciente().getNombre(),
-                cita.getFechaHora().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
-        );
-        System.out.println("Notificación: " + mensaje);
-        // Aquí iría el código para enviar notificación real al médico
     }
 }

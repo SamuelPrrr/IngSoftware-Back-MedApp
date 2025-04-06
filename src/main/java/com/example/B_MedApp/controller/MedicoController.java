@@ -2,6 +2,7 @@ package com.example.B_MedApp.controller;
 
 import com.example.B_MedApp.model.DiaSemana;
 import com.example.B_MedApp.model.HorarioLaboral;
+import com.example.B_MedApp.service.CitaService;
 import com.example.B_MedApp.service.MedicoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,18 +17,18 @@ public class MedicoController {
     private final MedicoService medicoService;
 
     @Autowired
-    public MedicoController(MedicoService medicoService) {
+    public MedicoController(MedicoService medicoService, CitaService citaService) {
         this.medicoService = medicoService;
     }
 
-    // Obtener Medico por correo
+    // Obtener Medico por correo para el perfil
     @GetMapping("/profile")
     public ResponseEntity<Object> getAuthenticatedUser(@RequestHeader("Authorization") String token) {
         token = token.replace("Bearer ", ""); // Remueve 'Bearer ' del token
         return medicoService.getAuthenticatedUser(token);
     }
 
-    // Obtener horarios del medico
+    // Horarios (CRUD)
     @GetMapping("/get/horarios")
     public ResponseEntity<Object> getHorarios(@RequestHeader("Authorization") String token) {
         token = token.replace("Bearer ", ""); // Remueve 'Bearer ' del token

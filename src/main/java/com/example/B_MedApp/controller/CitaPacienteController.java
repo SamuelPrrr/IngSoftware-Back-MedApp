@@ -41,7 +41,6 @@ public class CitaPacienteController {
     }
 
     @PutMapping("/{id}/estado")
-    //@PreAuthorize("hasRole('PACIENTE')")
     public ResponseEntity<Object> actualizarEstadoCita(
             @PathVariable Long id,
             @RequestParam EstadoCita nuevoEstado) {
