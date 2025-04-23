@@ -24,8 +24,15 @@ public class CitaMedicoController {
         return this.citaService.obtenerCitasPorMedico(token);
     }
 
+    @GetMapping("/pacientes")
+    public ResponseEntity<Object> obtenerPacientes(@RequestHeader ("Authorization")  String token) {
+        token = token.replace("Bearer ", "");
+        return  this.citaService.obtenerPacientesPorMedico(token);
+    }
+
     @PutMapping("/{id}/estado")
     public ResponseEntity<Object> actualizarEstadoCita(@PathVariable Long id, @RequestParam EstadoCita nuevoEstado) {
         return citaService.actualizarEstadoCita(id, nuevoEstado);
     }
+
 }

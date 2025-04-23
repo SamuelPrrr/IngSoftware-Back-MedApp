@@ -114,7 +114,7 @@ public class CitaService {
                 return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
             }
 
-            List<Cita> citas = citaRepository.findByPacienteOrderByFechaHoraDesc(pacienteOpt.get());
+            List<Cita> citas = citaRepository.findByPacienteOrderByFechaHoraAsc(pacienteOpt.get());
 
             // Puedes personalizar los datos que devuelves
             List<Map<String, Object>> citasResponse = citas.stream().map(cita -> {
@@ -402,7 +402,8 @@ public class CitaService {
         }
     }
 
-    // 2. Obtener todas las citas de un paciente (Se ocupa en Profile/Citas)
+    //Logica para medicos sobre las citas
+    // 2. Obtener todas las citas de un Medico (Se ocupa en el Dashboard)
     public ResponseEntity<Object> obtenerCitasPorMedico(String token) {
         HashMap<String, Object> response = new HashMap<>();
         try {
@@ -417,7 +418,6 @@ public class CitaService {
 
             List<Cita> citas = citaRepository.findByMedicoOrderByFechaHoraAsc(medicoOpt.get());
 
-            // Puedes personalizar los datos que devuelves
             List<Map<String, Object>> citasResponse = citas.stream().map(cita -> {
                 Map<String, Object> citaMap = new HashMap<>();
                 citaMap.put("id", cita.getIdCita());
@@ -442,4 +442,47 @@ public class CitaService {
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    public ResponseEntity<Object> obtenerPacientesPorMedico(String token) {
+        HashMap<String, Object> response = new HashMap<>();
+        try {
+            String correo = jwtService.getUsernameFromToken(token);
+            Optional<Medico> medicoOpt = medicoRepository.findByCorreoAndRol(correo, UserType.MEDICO);
+
+            if (medicoOpt.isEmpty()) {
+                response.put("error", true);
+                response.put("message", "Médico no encontrado");
+                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+            }
+
+            List<Cita> citas = citaRepository.findByMedicoOrderByFechaHoraAsc(medicoOpt.get());
+
+            // Usar un Set para evitar pacientes duplicados
+            Set<Paciente> pacientesUnicos = citas.stream()
+                    .map(Cita::getPaciente)
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
+
+            List<Map<String, Object>> pacientesResponse = pacientesUnicos.stream().map(paciente -> {
+                Map<String, Object> pacienteMap = new HashMap<>();
+                pacienteMap.put("id", paciente.getIdUsuario());
+                pacienteMap.put("nombre", paciente.getNombre());
+                pacienteMap.put("edad", paciente.getEdad());
+                pacienteMap.put("sexo", paciente.getSexo());
+                pacienteMap.put("telefono", paciente.getTelefono());
+                pacienteMap.put("altura", paciente.getAltura());
+                pacienteMap.put("peso", paciente.getPeso());
+                return pacienteMap;
+            }).collect(Collectors.toList());
+
+            response.put("error", false);
+            response.put("data", pacientesResponse);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } catch (Exception e) {
+            response.put("error", true);
+            response.put("message", "Error al obtener pacientes: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 }
