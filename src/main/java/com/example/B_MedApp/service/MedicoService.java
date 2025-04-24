@@ -84,10 +84,20 @@ public class MedicoService {
             return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
         }
 
-        horario.setMedico(medicoOpt.get());
-        horarioLaboralRepository.save(horario);
+        Medico medico = medicoOpt.get();
+        DiaSemana diaSemana = horario.getDiaSemana();
+
+        // Buscar y eliminar horario anterior si existe
+        Optional<HorarioLaboral> horarioExistente = horarioLaboralRepository.findByMedico_IdUsuarioAndDiaSemana(medico.getIdUsuario(), diaSemana);
+        horarioExistente.ifPresent(horarioLaboralRepository::delete);
+
+        // Guardar nuevo horario
+        horario.setMedico(medico);
+        HorarioLaboral horarioGuardado = horarioLaboralRepository.save(horario);
+
+        response.put("error", false);
         response.put("message", "Horario laboral registrado exitosamente");
-        response.put("data", horario);
+        response.put("data", horarioGuardado);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
@@ -140,7 +150,7 @@ public class MedicoService {
 
         Medico medico = medicoOpt.get();
 
-         DiaSemana diaSemana = horario.getDiaSemana();
+        DiaSemana diaSemana = horario.getDiaSemana();
         // Buscar el horario del médico en el día indicado
         Optional<HorarioLaboral> horarioOpt = horarioLaboralRepository.findByMedico_IdUsuarioAndDiaSemana(medico.getIdUsuario(), diaSemana);
 
