@@ -1,10 +1,7 @@
 package com.example.B_MedApp.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalTime;
 
@@ -14,6 +11,7 @@ import java.time.LocalTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class MedicamentoRecetado{
 
     @Id

@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/recetas")
 public class RecetaController {
@@ -29,16 +31,15 @@ public class RecetaController {
         return recetaService.obtenerReceta(idReceta);
     }
 
-    // Agregar medicamento a receta
     @PostMapping("/{idReceta}/medicamentos")
     public ResponseEntity<Object> agregarMedicamento(@PathVariable Long idReceta, @RequestBody AgregarMedicamentoRequest request) {
         return recetaService.agregarMedicamentoAReceta(
-                idReceta,
-                request.getIdMedicamento(),
-                request.getFrecuencia(),
-                request.getNumeroDias(),
-                request.getCantidadDosis()
-        );
+                    idReceta,
+                    request.getIdMedicamento(),
+                    request.getFrecuencia(),
+                    request.getNumeroDias(),
+                    request.getCantidadDosis()
+            );
     }
 
     // Eliminar medicamento de receta

@@ -35,7 +35,7 @@ public class MedicamentoService {
                         Map<String, Object> medicamentoMap = new LinkedHashMap<>();
                         medicamentoMap.put("id", med.getIdMedicamento());
                         medicamentoMap.put("nombre", med.getNombre());
-                        medicamentoMap.put("cantidad", med.getPresentacion());
+                        medicamentoMap.put("presentacion", med.getPresentacion());
                         medicamentoMap.put("tipo", med.getTipo());
                         return medicamentoMap;
                     })

@@ -3,6 +3,7 @@ package com.example.B_MedApp.service;
 import com.example.B_MedApp.jwt.JwtService;
 import com.example.B_MedApp.model.*;
 import com.example.B_MedApp.repository.*;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -65,6 +66,7 @@ public class RecetaService {
         }
     }
 
+    @Transactional
     public ResponseEntity<Object> agregarMedicamentoAReceta(
             Long idReceta,
             Long idMedicamento,
@@ -72,81 +74,61 @@ public class RecetaService {
             Integer numeroDias,
             String cantidadDosis) {
 
-        HashMap<String, Object> response = new HashMap<>();
         try {
-            // 1. Verificar que la receta existe
-            Optional<Receta> recetaOpt = recetaRepository.findById(idReceta);
-            if (recetaOpt.isEmpty()) {
-                response.put("error", true);
-                response.put("message", "Receta no encontrada");
-                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+            // Validaciones
+            if (numeroDias <= 0) {
+                throw new IllegalArgumentException("El número de días debe ser positivo");
             }
 
-            // 2. Verificar que el medicamento existe
-            Optional<Medicamento> medicamentoOpt = medicamentoRepository.findById(idMedicamento);
-            if (medicamentoOpt.isEmpty()) {
-                response.put("error", true);
-                response.put("message", "Medicamento no encontrado");
-                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+            // Buscar entidades
+            Receta receta = recetaRepository.findById(idReceta)
+                    .orElseThrow(() -> new EntityNotFoundException("Receta no encontrada"));
+
+            Medicamento medicamento = medicamentoRepository.findById(idMedicamento)
+                    .orElseThrow(() -> new EntityNotFoundException("Medicamento no encontrado"));
+
+            // Verificar duplicados
+            if (medicamentoRecetadoRepository.existsByRecetaAndMedicamento(receta, medicamento)) {
+                throw new IllegalStateException("Este medicamento ya está en la receta");
             }
 
-            // 3. Validar que el medicamento no esté ya en la receta
-            boolean medicamentoYaExiste = medicamentoRecetadoRepository.existsByRecetaIdRecetaAndMedicamentoIdMedicamento(
-                    idReceta,
-                    idMedicamento
-            );
+            // Crear medicamento recetado
+            MedicamentoRecetado medicamentoRecetado = MedicamentoRecetado.builder()
+                    .receta(receta)
+                    .medicamento(medicamento)
+                    .frecuencia(frecuencia)
+                    .numeroDias(numeroDias)
+                    .cantidadDosis(cantidadDosis)
+                    .numDosis((numeroDias * 24) / frecuencia.getHour())
+                    .dosisActual(0)
+                    .build();
 
-            if (medicamentoYaExiste) {
-                response.put("error", true);
-                response.put("message", "Este medicamento ya está incluido en la receta");
-                return new ResponseEntity<>(response, HttpStatus.CONFLICT);
-            }
+            // Guardar
+            MedicamentoRecetado saved = medicamentoRecetadoRepository.save(medicamentoRecetado);
 
-            // 4. Validar frecuencia (evitar división por cero)
-            if (frecuencia.getHour() == 0) {
-                response.put("error", true);
-                response.put("message", "La frecuencia no puede ser cero horas");
-                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-            }
+            // Construir respuesta
+            Map<String, Object> responseData = new HashMap<>();
+            responseData.put("idMedicamentoRecetado", saved.getIdMedicamentoEnReceta());
+            responseData.put("medicamento", Map.of(
+                    "idMedicamento", medicamento.getIdMedicamento(),
+                    "nombre", medicamento.getNombre(),
+                    "presentacion", medicamento.getPresentacion()
+            ));
+            responseData.put("frecuencia", saved.getFrecuencia().toString());
+            responseData.put("numeroDias", saved.getNumeroDias());
+            responseData.put("cantidadDosis", saved.getCantidadDosis());
 
-            // 5. Crear el medicamento recetado
-            MedicamentoRecetado nuevoMedicamentoRecetado = new MedicamentoRecetado();
-            nuevoMedicamentoRecetado.setReceta(recetaOpt.get());
-            nuevoMedicamentoRecetado.setMedicamento(medicamentoOpt.get());
-            nuevoMedicamentoRecetado.setFrecuencia(frecuencia);
-            nuevoMedicamentoRecetado.setNumeroDias(numeroDias);
-            nuevoMedicamentoRecetado.setCantidadDosis(cantidadDosis);
-
-            // Calcular número de dosis automáticamente
-            int numDosis = (numeroDias * 24) / frecuencia.getHour();
-            nuevoMedicamentoRecetado.setNumDosis(numDosis);
-            nuevoMedicamentoRecetado.setDosisActual(0); // Inicializar en 0
-
-            // 6. Guardar el medicamento recetado
-            MedicamentoRecetado saved = medicamentoRecetadoRepository.save(nuevoMedicamentoRecetado);
-
-            // 7. Actualizar la lista de medicamentos en la receta
-            Receta receta = recetaOpt.get();
-            receta.getMedicamentos().add(saved);
-            recetaRepository.save(receta);
-
-            // 8. Preparar respuesta
-            response.put("error", false);
-            response.put("message", "Medicamento añadido a receta exitosamente");
-            response.put("data", Map.of(
-                    "idMedicamentoRecetado", saved.getIdMedicamentoEnReceta(),
-                    "medicamento", saved.getMedicamento().getNombre(),
-                    "cantidadDosis", saved.getCantidadDosis(),
-                    "frecuencia", saved.getFrecuencia(),
-                    "dosisTotal", saved.getNumDosis()
+            return ResponseEntity.ok(Map.of(
+                    "error", false,
+                    "message", "Medicamento agregado exitosamente",
+                    "data", responseData
             ));
 
-            return new ResponseEntity<>(response, HttpStatus.CREATED);
-
         } catch (Exception e) {
-            response.put("error", true);
-            response.put("message", "Error al añadir medicamento a receta: " + e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", true,
+                    "message", e.getMessage()
+            ));
         }
     }
 

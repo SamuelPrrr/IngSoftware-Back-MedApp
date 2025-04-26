@@ -24,6 +24,12 @@ public class CitaMedicoController {
         return this.citaService.obtenerCitasPorMedico(token);
     }
 
+    @GetMapping("{idCita}")
+    public ResponseEntity<Object> obtenerCita(@RequestHeader ("Authorization") String token, @PathVariable Long idCita) {
+        token = token.replace("Bearer ", "");
+        return this.citaService.obtenerCita(token, idCita);
+    }
+
     @GetMapping("/pacientes")
     public ResponseEntity<Object> obtenerPacientes(@RequestHeader ("Authorization")  String token) {
         token = token.replace("Bearer ", "");

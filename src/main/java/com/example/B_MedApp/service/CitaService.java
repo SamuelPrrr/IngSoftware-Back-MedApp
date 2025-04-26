@@ -213,11 +213,11 @@ public class CitaService {
             }
 
             // Validar que el nuevo estado sea válido (confirmada o cancelada)
-            if (nuevoEstado != EstadoCita.CONFIRMADA && nuevoEstado != EstadoCita.CANCELADA) {
-                response.put("error", true);
-                response.put("message", "Estado no válido. Solo se permite confirmar o cancelar");
-                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-            }
+//            if (nuevoEstado != EstadoCita.CONFIRMADA && nuevoEstado != EstadoCita.CANCELADA ) {
+//                response.put("error", true);
+//                response.put("message", "Estado no válido. Solo se permite confirmar o cancelar");
+//                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+//            }
 
             // Actualizar estado
             cita.setEstado(nuevoEstado);
@@ -436,6 +436,41 @@ public class CitaService {
             response.put("data", citasResponse);
             return new ResponseEntity<>(response, HttpStatus.OK);
 
+        } catch (Exception e) {
+            response.put("error", true);
+            response.put("message", "Error al obtener citas: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public ResponseEntity<Object> obtenerCita(String token, Long idCita) {
+        HashMap<String, Object> response = new HashMap<>();
+        try{
+            String correo = jwtService.getUsernameFromToken(token);
+            Optional<Medico> medicoOpt = medicoRepository.findByCorreoAndRol(correo, UserType.MEDICO);
+
+            if (medicoOpt.isEmpty()) {
+                response.put("error", true);
+                response.put("message", "Medico no encontrado");
+                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+            }
+
+            Optional<Cita> citaOpt = citaRepository.findById(idCita);
+
+            if (citaOpt.isEmpty()) {
+                response.put("error", true);
+                response.put("message", "Cita no encontrada");
+                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+            }
+
+            Cita cita = citaOpt.get();
+
+            if(citaOpt.get().getMedico() == medicoOpt.get()){
+                response.put("error", false);
+                response.put("data", cita);
+                return new ResponseEntity<>(response, HttpStatus.OK);
+            }
+            return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
             response.put("error", true);
             response.put("message", "Error al obtener citas: " + e.getMessage());

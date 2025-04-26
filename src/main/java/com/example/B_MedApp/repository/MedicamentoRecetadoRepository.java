@@ -15,6 +15,8 @@ public interface MedicamentoRecetadoRepository extends JpaRepository<Medicamento
 
     boolean existsByRecetaIdRecetaAndMedicamentoIdMedicamento(Long recetaId, Long medicamentoId);
 
+    boolean existsByRecetaAndMedicamento(Receta receta, Medicamento medicamento);
+
     Optional<MedicamentoRecetado> findByIdMedicamentoEnReceta(Long idMedicamento);
 
 }
