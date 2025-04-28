@@ -1,11 +1,18 @@
 package com.example.B_MedApp.controller;
 
+import com.example.B_MedApp.dtos.MedicamentoRecetadoDTO;
 import com.example.B_MedApp.model.AgregarMedicamentoRequest;
+import com.example.B_MedApp.model.MedicamentoRecetado;
+import com.example.B_MedApp.service.MedicamentoRecetadoService;
+import com.example.B_MedApp.service.MedicamentoService;
 import com.example.B_MedApp.service.RecetaService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -13,10 +20,12 @@ import java.util.Map;
 public class RecetaController {
 
     private final RecetaService recetaService;
+    private final MedicamentoRecetadoService medicamentoRecetadoService;
 
     @Autowired
-    public RecetaController(RecetaService recetaService) {
+    public RecetaController(RecetaService recetaService, MedicamentoRecetadoService medicamentoRecetadoService) {
         this.recetaService = recetaService;
+        this.medicamentoRecetadoService = medicamentoRecetadoService;
     }
 
     // Crear nueva receta
@@ -60,5 +69,25 @@ public class RecetaController {
     @GetMapping("/por-cita/{idCita}")
     public ResponseEntity<Object> obtenerRecetasPorCita(@PathVariable Long idCita) {
         return recetaService.obtenerRecetasPorCita(idCita);
+    }
+
+    @GetMapping("/paciente/{pacienteId}")
+    public ResponseEntity<Object> getMedicamentosRecetadosByPacienteId(@PathVariable Long pacienteId) {
+        HashMap<String, Object> response = new HashMap<>();
+        try {
+            List<MedicamentoRecetadoDTO> medicamentos = medicamentoRecetadoService.getMedicamentosRecetadosByPacienteId(pacienteId);
+            response.put("error", false);
+            response.put("data", medicamentos);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            response.put("error", true);
+            response.put("message", "Error al obtener medicamentos: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PutMapping("/{idMedicamentoRecetado}/dosis")
+    public ResponseEntity<Object> registrarDosisTomada(@PathVariable Long idMedicamentoRecetado) {
+        return medicamentoRecetadoService.registrarDosisTomada(idMedicamentoRecetado);
     }
 }

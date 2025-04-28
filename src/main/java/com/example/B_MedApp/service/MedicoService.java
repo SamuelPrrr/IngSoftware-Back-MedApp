@@ -96,7 +96,7 @@ public class MedicoService {
         HorarioLaboral horarioGuardado = horarioLaboralRepository.save(horario);
 
         response.put("error", false);
-        response.put("message", "Horario laboral registrado exitosamente");
+        response.put("message", "Horario laboral registrado  exitosamente");
         response.put("data", horarioGuardado);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
@@ -165,4 +165,37 @@ public class MedicoService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    public ResponseEntity<Object> updateMedico(String token, Medico medicoActualizado) {
+        String correo = jwtService.getUsernameFromToken(token);
+        Optional<Medico> medicoOpt = medicoRepository.findByCorreoAndRol(correo, UserType.MEDICO);
+        HashMap<String, Object> response = new HashMap<>();
+
+        if (!medicoOpt.isPresent()) {
+            response.put("error", true);
+            response.put("message", "Médico no encontrado");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
+        Medico medico = medicoOpt.get();
+
+        // Actualizar solo los campos específicos
+        if (medicoActualizado.getEspecialidad() != null) {
+            medico.setEspecialidad(medicoActualizado.getEspecialidad());
+        }
+        if (medicoActualizado.getTelefono() != null) {
+            medico.setTelefono(medicoActualizado.getTelefono());
+        }
+
+        try {
+            medicoRepository.save(medico);
+            response.put("error", false);
+            response.put("message", "Médico actualizado correctamente");
+            response.put("data", medico);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("error", true);
+            response.put("message", "Error al actualizar el médico");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
 }

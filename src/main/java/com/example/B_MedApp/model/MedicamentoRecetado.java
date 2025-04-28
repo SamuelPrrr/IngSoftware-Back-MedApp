@@ -1,5 +1,6 @@
 package com.example.B_MedApp.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -36,6 +37,7 @@ public class MedicamentoRecetado{
     @Column(nullable = false)
     private Integer numDosis; // Calculado: (dias * 24 / frecuenciaHoras)
 
+    @JsonIgnore // Evita que se serialice la Receta dentro de MedicamentoRecetado
     @ManyToOne
     private Receta receta;
 }

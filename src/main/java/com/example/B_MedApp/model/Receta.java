@@ -1,5 +1,6 @@
 package com.example.B_MedApp.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -30,6 +31,7 @@ public class Receta {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String anotaciones; // Observaciones
 
+    @JsonIgnore // Esto evita que se serialice la lista de MedicamentoRecetado
     @OneToMany(mappedBy = "receta", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MedicamentoRecetado> medicamentos = new ArrayList<>();
 }

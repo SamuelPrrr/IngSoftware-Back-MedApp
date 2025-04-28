@@ -48,4 +48,15 @@ public class PacienteController {
     public ResponseEntity<Object> createPaciente(@RequestBody Paciente paciente) {
         return pacienteService.savePaciente(paciente);
     }
+
+    @PutMapping("/actualizar-datos")
+    public ResponseEntity<Object> actualizarDatosPaciente(
+            @RequestHeader("Authorization") String token,
+            @RequestBody Paciente pacienteActualizado) {
+
+        token = token.replace("Bearer ", ""); // Remueve 'Bearer ' del token
+        // Llamar al servicio de actualización
+        return pacienteService.updatePaciente(token, pacienteActualizado);
+    }
 }
+

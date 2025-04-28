@@ -2,6 +2,7 @@ package com.example.B_MedApp.controller;
 
 import com.example.B_MedApp.model.DiaSemana;
 import com.example.B_MedApp.model.HorarioLaboral;
+import com.example.B_MedApp.model.Medico;
 import com.example.B_MedApp.model.Paciente;
 import com.example.B_MedApp.service.CitaService;
 import com.example.B_MedApp.service.MedicoService;
@@ -62,4 +63,9 @@ public class MedicoController {
         return this.pacienteService.getAllPacientes();
     }
 
+    @PutMapping("/actualizar-datos")
+    public ResponseEntity<Object> actualizarDatosMedico(@RequestHeader("Authorization") String token, @RequestBody Medico medicoActualizado) {
+        token = token.replace("Bearer ", "");
+        return medicoService.updateMedico(token, medicoActualizado);
+    }
 }

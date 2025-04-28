@@ -1,5 +1,9 @@
 package com.example.B_MedApp.service;
 
+import com.example.B_MedApp.dtos.CitaInfoDTO;
+import com.example.B_MedApp.dtos.MedicamentoDTO;
+import com.example.B_MedApp.dtos.MedicamentoRecetadoDTO;
+import com.example.B_MedApp.dtos.RecetaInfoDTO;
 import com.example.B_MedApp.jwt.JwtService;
 import com.example.B_MedApp.model.*;
 import com.example.B_MedApp.repository.*;
@@ -10,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -164,5 +169,50 @@ public class MedicamentoRecetadoService {
             response.put("message", "Error al registrar dosis: " + e.getMessage());
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+
+    //Para
+    public List<MedicamentoRecetadoDTO> getMedicamentosRecetadosByPacienteId(Long pacienteId) {
+        List<MedicamentoRecetado> medicamentos = medicamentoRecetadoRepository.findAllByPacienteId(pacienteId);
+        return medicamentos.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    private MedicamentoRecetadoDTO convertToDTO(MedicamentoRecetado mr) {
+        MedicamentoRecetadoDTO dto = new MedicamentoRecetadoDTO();
+
+        // Mapear datos básicos
+        dto.setIdMedicamentoEnReceta(mr.getIdMedicamentoEnReceta());
+        dto.setFrecuencia(mr.getFrecuencia());
+        dto.setNumeroDias(mr.getNumeroDias());
+        dto.setCantidadDosis(mr.getCantidadDosis());
+        dto.setDosisActual(mr.getDosisActual());
+        dto.setNumDosis(mr.getNumDosis());
+
+        // Mapear Medicamento
+        MedicamentoDTO medicamentoDTO = new MedicamentoDTO();
+        medicamentoDTO.setIdMedicamento(mr.getMedicamento().getIdMedicamento());
+        medicamentoDTO.setNombre(mr.getMedicamento().getNombre());
+        medicamentoDTO.setPresentacion(mr.getMedicamento().getPresentacion());
+        medicamentoDTO.setTipo(mr.getMedicamento().getTipo());
+        dto.setMedicamento(medicamentoDTO);
+
+        // Mapear Receta (sin incluir la lista de medicamentos para evitar ciclos)
+        RecetaInfoDTO recetaDTO = new RecetaInfoDTO();
+        recetaDTO.setIdReceta(mr.getReceta().getIdReceta());
+        recetaDTO.setAnotaciones(mr.getReceta().getAnotaciones());
+
+        // Mapear Cita
+        CitaInfoDTO citaDTO = new CitaInfoDTO();
+        citaDTO.setIdCita(mr.getReceta().getCita().getIdCita());
+        citaDTO.setFechaHora(mr.getReceta().getCita().getFechaHora());
+        citaDTO.setEstado(mr.getReceta().getCita().getEstado().toString());
+
+        recetaDTO.setCita(citaDTO);
+        dto.setReceta(recetaDTO);
+
+        return dto;
     }
 }

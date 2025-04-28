@@ -66,6 +66,43 @@ public class PacienteService {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
+    public ResponseEntity<Object> updatePaciente(String token, Paciente pacienteActualizado) {
+        String correo = jwtService.getUsernameFromToken(token);
+        Optional<Paciente> pacienteOpt = pacienteRepository.findByCorreoAndRol(correo, UserType.PACIENTE);
+        HashMap<String, Object> response = new HashMap<>();
 
+        if (!pacienteOpt.isPresent()) {
+            response.put("error", true);
+            response.put("message", "Paciente no encontrado");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
 
+        Paciente paciente = pacienteOpt.get();
+
+        // Actualizar solo los campos específicos
+        if (pacienteActualizado.getAltura() != null) {
+            paciente.setAltura(pacienteActualizado.getAltura());
+        }
+        if (pacienteActualizado.getPeso() != null) {
+            paciente.setPeso(pacienteActualizado.getPeso());
+        }
+        if (pacienteActualizado.getEdad() != null) {
+            paciente.setEdad(pacienteActualizado.getEdad());
+        }
+        if (pacienteActualizado.getDireccion() != null) {
+            paciente.setDireccion(pacienteActualizado.getDireccion());
+        }
+
+        try {
+            pacienteRepository.save(paciente);
+            response.put("error", false);
+            response.put("message", "Paciente actualizado correctamente");
+            response.put("data", paciente);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("error", true);
+            response.put("message", "Error al actualizar el paciente");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
 }
