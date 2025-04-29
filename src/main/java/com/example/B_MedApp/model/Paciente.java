@@ -36,7 +36,4 @@ public class Paciente extends Usuario {
     public Paciente(String nombre, String correo, String telefono, String sexo, String password, UserType userType) {
         super(nombre, correo, telefono, sexo, password, userType); // Llama al constructor de Usuario
     }
-
-
-
 }

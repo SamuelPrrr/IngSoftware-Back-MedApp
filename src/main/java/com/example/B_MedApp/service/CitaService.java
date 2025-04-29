@@ -2,10 +2,7 @@ package com.example.B_MedApp.service;
 
 import com.example.B_MedApp.jwt.JwtService;
 import com.example.B_MedApp.model.*;
-import com.example.B_MedApp.repository.CitaRepository;
-import com.example.B_MedApp.repository.HorarioLaboralRepository;
-import com.example.B_MedApp.repository.MedicoRepository;
-import com.example.B_MedApp.repository.PacienteRepository;
+import com.example.B_MedApp.repository.*;
 import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,14 +24,16 @@ public class CitaService {
     private final PacienteRepository pacienteRepository;
     private final HorarioLaboralRepository horarioLaboralRepository;
     private final JwtService jwtService;
+    private final UsuarioRepository usuarioRepository;
 
     public CitaService(CitaRepository citaRepository, MedicoRepository medicoRepository,
-                       PacienteRepository pacienteRepository, JwtService jwtService, HorarioLaboralRepository horarioLaboralRepository) {
+                       PacienteRepository pacienteRepository, JwtService jwtService, HorarioLaboralRepository horarioLaboralRepository, UsuarioRepository usuarioRepository) {
         this.citaRepository = citaRepository;
         this.medicoRepository = medicoRepository;
         this.pacienteRepository = pacienteRepository;
         this.jwtService = jwtService;
         this.horarioLaboralRepository = horarioLaboralRepository;
+        this.usuarioRepository = usuarioRepository;
     }
 
     // 1. Registrar nueva cita
@@ -519,5 +518,23 @@ public class CitaService {
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    //Para admins
+    public ResponseEntity<Object> obtenerAllCitas() {
+        HashMap<String, Object> response = new HashMap<>();
+        try {
+
+            List<Cita> citas = citaRepository.findAll();
+            response.put("error", false);
+            response.put("data", citas);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } catch (Exception e) {
+            response.put("error", true);
+            response.put("message", "Error al obtener citas por fecha: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 
 }

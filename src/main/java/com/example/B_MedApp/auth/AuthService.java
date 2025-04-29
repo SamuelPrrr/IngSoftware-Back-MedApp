@@ -67,7 +67,7 @@ public class AuthService {
                 break;
             case ADMINISTRADOR:
                 response.put("message", "El usuario es Administrador");
-                response.put("data", "/admin/tabs"); // Ejemplo de ruta
+                response.put("data", "/(admin)/profile"); // Ejemplo de ruta
                 break;
             default:
                 response.put("error", true);
@@ -107,6 +107,20 @@ public class AuthService {
                 UserType.MEDICO
         );
         medicoRepository.save(user);
+        return "Success";
+    }
+
+    public String registerAdmin(RegisterRequest request) {
+        String encodedPassword = passwordEncoder.encode(request.getPassword());
+        Medico user = new Medico(
+                request.getNombre(),
+                request.getCorreo(),
+                request.getTelefono(),
+                request.getSexo(),
+                encodedPassword,
+                UserType.ADMINISTRADOR
+        );
+        usuarioRepository.save(user);
         return "Success";
     }
 }
