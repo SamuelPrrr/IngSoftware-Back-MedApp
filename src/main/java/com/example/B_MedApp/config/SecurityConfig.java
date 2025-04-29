@@ -38,6 +38,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/medicos/**").hasAuthority("ROLE_MEDICO")
                         .requestMatchers("/api/medicos/citas/**").hasAuthority("ROLE_MEDICO")
                         .requestMatchers("api/admin/**").hasAuthority("ROLE_ADMINISTRADOR")
+                        .requestMatchers("api/medicamentos").hasAuthority("ROLE_ADMINISTRADOR")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
