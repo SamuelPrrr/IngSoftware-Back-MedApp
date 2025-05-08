@@ -79,4 +79,10 @@ public class UsuarioController {
         // Implementación opcional si necesitas buscar por ID sin saber el tipo
         return usuarioService.getUserByCorreo(""); // Modificar según necesidad
     }
+
+    @PatchMapping("/{id}/desactivar")
+    public ResponseEntity<Void> desactivarUsuario(@PathVariable Long id) {
+        usuarioService.desactivarUsuario(id);
+        return ResponseEntity.ok().build();
+    }
 }

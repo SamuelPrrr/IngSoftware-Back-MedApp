@@ -8,6 +8,8 @@ import com.example.B_MedApp.model.Usuario;
 import com.example.B_MedApp.repository.PacienteRepository;
 import com.example.B_MedApp.repository.MedicoRepository;
 import com.example.B_MedApp.repository.UsuarioRepository;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -133,5 +135,13 @@ public class UsuarioService {
 
         response.put("message", "Usuario actualizado con éxito");
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Transactional
+    public void desactivarUsuario(Long idUsuario) {
+        Usuario usuario = usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+        usuario.desactivar();
+        usuarioRepository.save(usuario);
     }
 }

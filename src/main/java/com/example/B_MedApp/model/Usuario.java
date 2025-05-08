@@ -40,6 +40,16 @@ public abstract class Usuario implements UserDetails { //Implementamos UserDetai
     @Enumerated(EnumType.STRING)
     private UserType rol;
 
+    @Getter
+    @Column(name = "activo", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
+    private boolean activo = true; // Por defecto, el usuario está activo
+
+
+    // Método para desactivar
+    public void desactivar() {
+        this.activo = false;
+    }
+
     @PrePersist
     public void setDefaultRole() {
         if (this.rol == null) {
@@ -84,10 +94,5 @@ public abstract class Usuario implements UserDetails { //Implementamos UserDetai
     @Override
     public boolean isCredentialsNonExpired() {
         return true; // Para este ejemplo, consideramos que las credenciales no están expiradas
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return true; // Para este ejemplo, consideramos que la cuenta está habilitada
     }
 }
